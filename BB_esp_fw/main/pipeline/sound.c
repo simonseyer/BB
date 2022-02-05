@@ -6,7 +6,8 @@
 void pipe_sound_init()
 {
     INFO("pipe_sound_init");
-
+    esp_log_level_set("AUDIO_ELEMENT", ESP_LOG_DEBUG);
+    esp_log_level_set("AUDIO_PIPELINE", ESP_LOG_DEBUG);
     pipes.sound.lock = xSemaphoreCreateBinary();
 
     pipes.sound.total_len = 0;
@@ -17,7 +18,7 @@ void pipe_sound_init()
 
     raw_stream_cfg_t raw_cfg = RAW_STREAM_CFG_DEFAULT();
     raw_cfg.type = AUDIO_STREAM_WRITER;
-    raw_cfg.out_rb_size = 12 * 1024;
+    raw_cfg.out_rb_size = 32 * 1024;
     pipes.sound.stream = raw_stream_init(&raw_cfg);
 
     wav_decoder_cfg_t wav_cfg = DEFAULT_WAV_DECODER_CONFIG();
@@ -85,9 +86,10 @@ void pipe_sound_event(audio_event_iface_msg_t * msg)
 		{
 			INFO("sound finished");
 
-			xSemaphoreTake(pipes.sound.lock, WAIT_INF);
-            pipe_sound_reset();
-            xSemaphoreGive(pipes.sound.lock);
+			//xSemaphoreTake(pipes.sound.lock, WAIT_INF);
+			//pipes.sound.id = 0;
+			//audio_pipeline_reset_ringbuffer(pipes.sound.pipe);
+            //xSemaphoreGive(pipes.sound.lock);
 		}
 
 		if (type == AEL_STATUS_STATE_STOPPED)
@@ -134,10 +136,11 @@ void pipe_sound_request_next()
 
 		if (size >= SOUND_PACKET_SIZE || (pipes.sound.total_len - pipes.sound.pos) <= size)
 		{
+			INFO("sending request for new data id %u (space avalible %u)", pipes.sound.id, size);
 			pipes.sound.request = true;
 			protocol_send_sound_reg_more(pipes.sound.id, SOUND_PACKET_SIZE);
 		} else {
-			INFO("not sending request for new data", pipes.sound.id, size);
+			INFO("not sending request for new data id %u (space avalible %u)", pipes.sound.id, size);
 			audio_element_set_ringbuf_done(pipes.sound.stream);
 		}
 	}

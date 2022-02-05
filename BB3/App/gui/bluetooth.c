@@ -88,6 +88,8 @@ void bluetooth_notify(proto_bt_notify_t * packet)
 
 		snprintf(msg, sizeof(msg), "%s connected (%s)", get_dev_name(packet->dev, name), tag[index]);
 
+		sound_bt_conn();
+
         if (dialog_on)
         {
             dialog_close();
@@ -119,6 +121,8 @@ void bluetooth_notify(proto_bt_notify_t * packet)
 			telemetry_stop();
 
 		snprintf(msg, sizeof(msg), "%s disconnected (%s)",  get_dev_name(packet->dev, name), tag[index]);
+
+		sound_bt_disc();
 	}
 
 	if (packet->mode & PROTO_BT_MODE_PAIRED)

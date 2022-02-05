@@ -26,10 +26,6 @@ static lv_obj_t * audio_init(lv_obj_t * par)
 	gui_list_auto_entry(list, "Bluetooth volume", &profile.audio.a2dp_volume, &vol_opt);
 //	gui_list_auto_entry(list, "TTS alerts", &profile.audio.tts_alerts, NULL);
 
-	if (file_exists(DEV_MODE_FILE)) {
-		sound_start("system/assets/defaults/tts/en/takeoff.wav");
-	}
-
 	return list;
 }
 

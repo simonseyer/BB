@@ -17,7 +17,28 @@ FIL audio_file;
 uint8_t audio_file_id = 0;
 static bool audio_file_opened = false;
 
-#define SOUND_FIRST_CHUNK_SIZE 2048
+#define SOUND_PACKET_SIZE (1024 * 4)
+
+void sound_take_off() {
+	sound_start(PATH_TTS_DIR "/takeoff.wav");
+}
+
+void sound_landing() {
+	sound_start(PATH_TTS_DIR "/landed.wav");
+}
+
+void sound_gnss_ok() {
+	sound_start(PATH_TTS_DIR "/gnss_ok.wav");
+}
+
+void sound_bt_conn() {
+	sound_start(PATH_TTS_DIR "/bt_conn.wav");
+}
+
+void sound_bt_disc() {
+	sound_start(PATH_TTS_DIR "/bt_disc.wav");
+}
+
 
 void sound_start(char * filename)
 {
@@ -33,10 +54,11 @@ void sound_start(char * filename)
         audio_file_id++;
         if (audio_file_id == 0)
             audio_file_id = 1;
-        INFO("playing audio file: %s", filename);
-        esp_sound_start(audio_file_id, PROTO_FILE_WAV, f_size(&audio_file));
-        sound_read_next(audio_file_id, SOUND_FIRST_CHUNK_SIZE);
+        INFO("Playing audio file: %s", filename);
         audio_file_opened = true;
+        esp_sound_start(audio_file_id, PROTO_FILE_WAV, f_size(&audio_file));
+        // send first packet with sound data
+        sound_read_next(audio_file_id, SOUND_PACKET_SIZE);
     } else {
     	WARN("Cannot open sound %s file", filename);
     }
