@@ -17,6 +17,8 @@ FIL audio_file;
 uint8_t audio_file_id = 0;
 static bool audio_file_opened = false;
 
+#define SOUND_FIRST_CHUNK_SIZE 2048
+
 void sound_start(char * filename)
 {
     if (audio_file_opened)
@@ -31,9 +33,12 @@ void sound_start(char * filename)
         audio_file_id++;
         if (audio_file_id == 0)
             audio_file_id = 1;
-
+        INFO("playing audio file: %s", filename);
         esp_sound_start(audio_file_id, PROTO_FILE_WAV, f_size(&audio_file));
+        sound_read_next(audio_file_id, SOUND_FIRST_CHUNK_SIZE);
         audio_file_opened = true;
+    } else {
+    	WARN("Cannot open sound %s file", filename);
     }
 }
 

@@ -40,11 +40,14 @@ void pipe_sound_init()
     audio_pipeline_register(pipes.sound.pipe, pipes.sound.raw, "raw");
 
     const char *link[4] = {"stream", "decoder", "filter", "raw"};
+
     audio_pipeline_link(pipes.sound.pipe, &link[0], 4);
 
     downmix_set_input_rb(pipes.output.mix, audio_element_get_input_ringbuf(pipes.sound.raw), SOURCE_SOUND_INDEX);
     downmix_set_source_stream_info(pipes.output.mix, OUTPUT_SAMPLERATE, OUTPUT_CHANNELS, SOURCE_SOUND_INDEX);
     audio_pipeline_set_listener(pipes.sound.pipe, pipes.events);
+
+    //audio_pipeline_run(pipes.sound.pipe);
 
     xSemaphoreGive(pipes.sound.lock);
 }
@@ -121,6 +124,7 @@ void pipe_sound_request_next()
 {
 	xSemaphoreTake(pipes.sound.lock, WAIT_INF);
 
+	INFO(">>>> pipe_sound_request_next id %u, size: %u, request: %d", pipes.sound.id, (pipes.sound.total_len - pipes.sound.pos), pipes.sound.request);
 	if (pipes.sound.id > 0	//sound started
 			&& (pipes.sound.total_len - pipes.sound.pos) > 0 //not reached the end
 			&& !pipes.sound.request) //request is not pending
@@ -130,9 +134,11 @@ void pipe_sound_request_next()
 
 		if (size >= SOUND_PACKET_SIZE || (pipes.sound.total_len - pipes.sound.pos) <= size)
 		{
-			INFO("sending request for new data id %u (space avalible %u)", pipes.sound.id, size);
 			pipes.sound.request = true;
 			protocol_send_sound_reg_more(pipes.sound.id, SOUND_PACKET_SIZE);
+		} else {
+			INFO("not sending request for new data", pipes.sound.id, size);
+			audio_element_set_ringbuf_done(pipes.sound.stream);
 		}
 	}
 
@@ -141,7 +147,6 @@ void pipe_sound_request_next()
 
 void pipe_sound_write(uint8_t id, uint8_t * buf, uint16_t len)
 {
-	xSemaphoreTake(pipes.sound.lock, WAIT_INF);
 
 	if (id == pipes.sound.id)
 	{
@@ -149,13 +154,26 @@ void pipe_sound_write(uint8_t id, uint8_t * buf, uint16_t len)
 
 		if (len > 0)
 		{
+			xSemaphoreTake(pipes.sound.lock, WAIT_INF);
+
 			pipes.sound.pos += len;
 			raw_stream_write(pipes.sound.stream, (char *)buf, len);
 
+			xSemaphoreGive(pipes.sound.lock);
+
 			if (pipes.sound.pos >= pipes.sound.total_len)
 			{
+				xSemaphoreTake(pipes.sound.lock, WAIT_INF);
+
 				//this was last data chunk
+				pipes.sound.request = false;
 				audio_element_set_ringbuf_done(pipes.sound.stream);
+
+				xSemaphoreGive(pipes.sound.lock);
+
+			} else {
+				pipes.sound.request = false;
+				pipe_sound_request_next();
 			}
 		}
 	}
@@ -164,9 +182,6 @@ void pipe_sound_write(uint8_t id, uint8_t * buf, uint16_t len)
 		WARN("Wrong id %u != %u", id, pipes.sound.id);
 	}
 
-	pipes.sound.request = false;
-
-    xSemaphoreGive(pipes.sound.lock);
 }
 
 void pipe_sound_start(uint8_t id, uint8_t type, uint32_t len)
@@ -182,11 +197,10 @@ void pipe_sound_start(uint8_t id, uint8_t type, uint32_t len)
 	}
 
     pipes.sound.id = id;
-
-    audio_pipeline_run(pipes.sound.pipe);
-
     pipes.sound.total_len = len;
     pipes.sound.pos = 0;
+
+    audio_pipeline_run(pipes.sound.pipe);
 
     xSemaphoreGive(pipes.sound.lock);
 }
@@ -213,7 +227,8 @@ void pipe_sound_stop()
 	pipe_sound_reset();
 }
 
-void pipe_sound_loop()
-{
-	pipe_sound_request_next();
-}
+//void pipe_sound_loop()
+//{
+//	INFO("pipe_sound_loop");
+//	pipe_sound_request_next();
+//}
