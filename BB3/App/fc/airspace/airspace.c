@@ -6,7 +6,33 @@
  */
 
 #include "airspace.h"
+#include "fc/fc.h"
 
+
+uint16_t airspace_alt(char * line, bool * amsl)
+{
+    bool fl = false;
+
+
+
+    if (strncmp("FL", line, 2) == 0)
+    {
+        line += 2;
+        fl = true;
+    }
+
+    uint16_t value = atoi_c(line);
+
+    if (fl)
+        value = (value * 100) / FC_METER_TO_FEET;
+
+    if (strstr(line, "ft") != NULL)
+        value /= FC_METER_TO_FEET;
+
+
+
+        return 0;
+}
 
 void airspace_load(char * path)
 {
@@ -76,7 +102,7 @@ void airspace_load(char * path)
 
                 continue;
             }
-            if (strncmp("AN ", line, 3) == 0)
+            else if (strncmp("AN ", line, 3) == 0)
             {
                 line += 3;
 
@@ -91,6 +117,10 @@ void airspace_load(char * path)
                 strncpy(actual->name, line, len - 1);
 
                 continue;
+            }
+            else if (strncmp("AH ", line, 3) == 0)
+            {
+                line += 3;
             }
 
 

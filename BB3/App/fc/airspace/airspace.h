@@ -45,8 +45,8 @@ typedef struct __gnss_pos_list_t
 typedef struct __airspace_record_t
 {
     char * name;
-    int32_t floor;
-    int32_t ceil;
+    uint16_t floor;
+    uint16_t ceil;
 
     bool floor_amsl;
     bool ceil_amsl;
