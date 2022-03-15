@@ -9,11 +9,12 @@
 #include "fc/fc.h"
 
 
-uint16_t airspace_alt(char * line, bool * amsl)
+uint16_t airspace_alt(char * line, bool * gnd)
 {
     bool fl = false;
 
-
+    if (strstr(line, "GND") != NULL)
+        *gnd = true;
 
     if (strncmp("FL", line, 2) == 0)
     {
@@ -24,14 +25,21 @@ uint16_t airspace_alt(char * line, bool * amsl)
     uint16_t value = atoi_c(line);
 
     if (fl)
+    {
         value = (value * 100) / FC_METER_TO_FEET;
+        *gnd = false;
+    }
 
     if (strstr(line, "ft") != NULL)
         value /= FC_METER_TO_FEET;
 
+    if (strstr(line, "AMSL") != NULL)
+        *gnd = false;
 
 
-        return 0;
+
+
+    return value;
 }
 
 void airspace_load(char * path)
