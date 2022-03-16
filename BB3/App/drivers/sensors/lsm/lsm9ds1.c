@@ -44,9 +44,9 @@ void lsm9ds1_init()
     //Temperature compenstaion - on
     //XY Mode - Ultra high performance
     //ODR - 80Hz
-    //Fast ODR ??? - enabled
+    //Fast ODR  - off
     //Self test - off
-    mems_i2c_write8(LSM_MAG, 0x20, 0b11111110);
+    mems_i2c_write8(LSM_MAG, 0x20, 0b11111100);
 
     //CTRL_REG3_M
     //I2c enable
@@ -61,9 +61,9 @@ void lsm9ds1_init()
     mems_i2c_write8(LSM_MAG, 0x23, 0b00001100);
 
     //CTRL_REG5_M
-    //Fast read - on
+    //Fast read - off
     //Block data update protection - on
-    mems_i2c_write8(LSM_MAG, 0x24, 0b11000000);
+    mems_i2c_write8(LSM_MAG, 0x24, 0b01000000);
 }
 
 void lsm9ds1_start_acc_gyro(mems_i2c_cb_t cb)
@@ -74,7 +74,7 @@ void lsm9ds1_start_acc_gyro(mems_i2c_cb_t cb)
 void lsm9ds1_start_mag(mems_i2c_cb_t cb)
 {
     //0x80 - auto increment
-    mems_i2c_read_block_start(LSM_MAG, 0x28 | 0x80, lsm_read_buffer, 2 * 3, cb);
+    mems_i2c_read_block_start(LSM_MAG, 0x28 /*| 0x80*/, lsm_read_buffer, 2 * 3, cb);
 }
 
 void lsm9ds1_read_acc_gyro()
@@ -112,4 +112,6 @@ void lsm9ds1_read_mag()
     fc.imu.raw.mag.x = (*((int16_t *)&lsm_read_buffer[0]));
     fc.imu.raw.mag.y = (*((int16_t *)&lsm_read_buffer[4]));
     fc.imu.raw.mag.z = (*((int16_t *)&lsm_read_buffer[2]));
+
+    memcpy(fc.imu.raw.buff, lsm_read_buffer, 6);
 }

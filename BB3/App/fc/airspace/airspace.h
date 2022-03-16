@@ -22,6 +22,8 @@ typedef enum
     ac_class_D,
     ac_glider_prohibited,
     ac_ctr,
+    ac_tmz,
+    ac_rmz,
     ac_wave_window,
     ac_undefined,
 } airspace_class_t;
@@ -48,8 +50,8 @@ typedef struct __airspace_record_t
     uint16_t floor;
     uint16_t ceil;
 
-    bool floor_amsl;
-    bool ceil_amsl;
+    bool floor_gnd;
+    bool ceil_gnd;
     airspace_class_t airspace_class;
     uint8_t _pad[1];
 

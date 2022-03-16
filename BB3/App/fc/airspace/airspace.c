@@ -9,6 +9,20 @@
 #include "fc/fc.h"
 
 
+bool airspace_point(char * line, int32_t lon, int32_t lat)
+{
+    uint8_t lat_deg, lat_min, lat_sec, lat_dsec;
+    uint8_t lon_deg, lon_min, lon_sec, lon_dsec;
+    char lat_c, lon_c;
+
+    sscanf(line, "%02u:%02u:%02u.%02 %c %03u:%02u:%02u.%02 %c",
+            &lat_deg, &lat_min, &lat_sec, &lat_dsec, &lat_c,
+            &lon_deg, &lon_min, &lon_sec, &lon_dsec, &lon_c);
+
+    lat = lat_deg * GNSS_MUL
+            + (lat_min * 100) / 60;
+}
+
 uint16_t airspace_alt(char * line, bool * gnd)
 {
     bool fl = false;
@@ -99,12 +113,16 @@ void airspace_load(char * path)
                     actual->airspace_class = ac_class_C;
                 else if (*line == 'D')
                     actual->airspace_class = ac_class_D;
+                else if (*line == 'W')
+                    actual->airspace_class = ac_wave_window;
                 else if (strncmp(line, "PG", 2) == 0)
                     actual->airspace_class = ac_glider_prohibited;
                 else if (strncmp(line, "CTR", 3) == 0)
                     actual->airspace_class = ac_ctr;
-                else if (*line == 'W')
-                    actual->airspace_class = ac_wave_window;
+                else if (strncmp(line, "TMZ", 3) == 0)
+                    actual->airspace_class = ac_tmz;
+                else if (strncmp(line, "RMZ", 3) == 0)
+                    actual->airspace_class = ac_rmz;
                 else
                     actual->airspace_class = ac_undefined;
 
@@ -129,6 +147,14 @@ void airspace_load(char * path)
             else if (strncmp("AH ", line, 3) == 0)
             {
                 line += 3;
+
+                actual->ceil = airspace_alt(line, &actual->ceil_gnd);
+            }
+            else if (strncmp("AL ", line, 3) == 0)
+            {
+                line += 3;
+
+                actual->floor = airspace_alt(line, &actual->floor_gnd);
             }
 
 

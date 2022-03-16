@@ -7,6 +7,9 @@ The file contains snapshot of the STM memory, debug.log, listing of files on sdc
 
 Please include whole zip file, when reporting an issue.
 
+Added:
+ * IMU raw data recorder
+
 Fixes:
  * Bugs in file manager
  * Manual FW install
