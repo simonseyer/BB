@@ -1,0 +1,19 @@
+name: Build Firmware
+
+on:
+  pull_request
+
+jobs:
+  build-firmware:
+    runs-on: ubuntu-18.04
+    container:
+      image: ghcr.io/simonseyer/esp32
+      credentials:
+          username: simonseyer
+          password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
+    steps:
+        - name: build-esp32
+          shell: bash
+          run: |
+            cd BB_esp_fw
+            $IDF_PATH/tools/idf.py build
