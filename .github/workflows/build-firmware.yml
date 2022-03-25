@@ -12,7 +12,9 @@ jobs:
           username: simonseyer
           password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
     steps:
-        - name: build-esp32
+        - name: Check out repository
+          uses: actions/checkout@v3
+        - name: Build ESP32 firmware
           shell: bash
           run: |
             cd BB_esp_fw
